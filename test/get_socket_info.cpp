@@ -29,7 +29,7 @@ void check_address_port(int domain, socklen_t min_len, const std::string& expect
     EXPECT_EQ(actual.port, expected_port);
 }
 
-void check_bad_length(int domain)
+void check_bad_length(int domain, socklen_t length)
 {
     const auto sock   = create_socket(domain, SOCK_STREAM, 0);
     auto close_socket = gsl::finally([sock]() { close(sock); });
@@ -38,7 +38,9 @@ void check_bad_length(int domain)
     socklen_t len = sizeof(ss);
     get_sock_name(sock, ss, len);
 
-    const auto actual = psb::get_socket_info(ss, 0);
+    ASSERT_GE(len, length);
+
+    const auto actual = psb::get_socket_info(ss, sizeof(sa_family_t) + 1);
     EXPECT_EQ(actual.address, std::string{});
     EXPECT_EQ(actual.port, 0);
 }
@@ -64,9 +66,14 @@ TEST(GetSocketInfo, NotOpenSocketLocal)
     check_address_port(AF_LOCAL, sizeof(sa_family_t), "", 0);
 }
 
+TEST(GetSocketInfo, ZeroLengthIPv4)
+{
+    check_bad_length(AF_INET, 0);
+}
+
 TEST(GetSocketInfo, BadLengthIPv4)
 {
-    check_bad_length(AF_INET);
+    check_bad_length(AF_INET, sizeof(sa_family_t) + 1);
 }
 
 TEST(GetSocketInfo, BadLengthIPv6)
@@ -75,12 +82,12 @@ TEST(GetSocketInfo, BadLengthIPv6)
         GTEST_SKIP() << "IPv6 not supported";
     }
 
-    check_bad_length(AF_INET6);
+    check_bad_length(AF_INET6, sizeof(sa_family_t) + 1);
 }
 
 TEST(GetSocketInfo, BadLengthLocal)
 {
-    check_bad_length(AF_LOCAL);
+    check_bad_length(AF_LOCAL, offsetof(sockaddr_un, sun_path) - 1);
 }
 
 TEST(GetSocketInfo, AbstractLocalSocket)

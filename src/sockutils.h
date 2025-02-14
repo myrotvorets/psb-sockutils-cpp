@@ -5,6 +5,7 @@
 #include <string>
 #include <string_view>
 
+#include <arpa/inet.h>
 #include <sys/socket.h>
 
 #include "export.h"
@@ -39,6 +40,26 @@ PSB_SOCKUTILS_EXPORT listening_socket_t
 create_listening_socket(const std::string& address, std::uint16_t port, const socket_options_t& opts);
 
 PSB_SOCKUTILS_EXPORT socket_info_t get_socket_info(const sockaddr_storage& ss, socklen_t len);
+
+/**
+ * @brief Converts the IPv4 address @a address src into a network address structure @a dst.
+ *
+ * @param address IPv4 address.
+ * @param dst Network address structure to store the result.
+ * @throw std::invalid_argument The address is not valid IPv4 address.
+ * @throw std::system_error The address family is not supported.
+ */
+PSB_SOCKUTILS_EXPORT void inet_pton(const std::string& address, in_addr& dst);
+
+/**
+ * @brief Converts the IPv6 address @a address src into a network address structure @a dst.
+ *
+ * @param address IPv6 address.
+ * @param dst Network address structure to store the result.
+ * @throw std::invalid_argument The address is not valid IPv4 address.
+ * @throw std::system_error The address family is not supported.
+ */
+PSB_SOCKUTILS_EXPORT void inet_pton(const std::string& address, in6_addr& dst);
 
 }  // namespace psb
 

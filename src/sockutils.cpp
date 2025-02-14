@@ -1,6 +1,7 @@
 #include "sockutils.h"
 
 #include <array>
+#include <cassert>
 #include <cerrno>
 #include <cstddef>
 #include <format>
@@ -26,44 +27,26 @@ namespace {
 void bind_ipv4(int sock, const std::string& address, std::uint16_t port)
 {
     sockaddr_in sin{};
-    auto res = inet_pton(AF_INET, address.c_str(), &sin.sin_addr);
-    if (res == 1) [[likely]] {
-        sin.sin_family = AF_INET;
-        sin.sin_port   = htons(port);
+    psb::inet_pton(address, sin.sin_addr);
+    sin.sin_family = AF_INET;
+    sin.sin_port   = htons(port);
 
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        if (res = bind(sock, reinterpret_cast<const sockaddr*>(&sin), sizeof(sin)); res < 0) [[unlikely]] {
-            throw_bind_error(errno, address, port);
-        }
-    }
-    else if (res == 0) {
-        throw std::invalid_argument("Invalid IPv4 address: " + address);
-    }
-    else [[unlikely]] {  // EAFNOSUPPORT case
-        const auto err = errno;
-        throw std::system_error(err, std::generic_category(), std::format("inet_pton(AF_INET, {})", address));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    if (const auto res = bind(sock, reinterpret_cast<const sockaddr*>(&sin), sizeof(sin)); res < 0) [[unlikely]] {
+        throw_bind_error(errno, address, port);
     }
 }
 
 void bind_ipv6(int sock, const std::string& address, std::uint16_t port)
 {
     sockaddr_in6 sin{};
-    auto res = inet_pton(AF_INET6, address.c_str(), &sin.sin6_addr);
-    if (res == 1) [[likely]] {
-        sin.sin6_family = AF_INET6;
-        sin.sin6_port   = htons(port);
+    psb::inet_pton(address, sin.sin6_addr);
+    sin.sin6_family = AF_INET6;
+    sin.sin6_port   = htons(port);
 
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        if (res = bind(sock, reinterpret_cast<const sockaddr*>(&sin), sizeof(sin)); res < 0) [[unlikely]] {
-            throw_bind_error(errno, address, port);
-        }
-    }
-    else if (res == 0) {
-        throw std::invalid_argument("Invalid IPv6 address: " + address);
-    }
-    else [[unlikely]] {  // EAFNOSUPPORT case
-        const auto err = errno;
-        throw std::system_error(err, std::generic_category(), std::format("inet_pton(AF_INET6, {})", address));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    if (const auto res = bind(sock, reinterpret_cast<const sockaddr*>(&sin), sizeof(sin)); res < 0) [[unlikely]] {
+        throw_bind_error(errno, address, port);
     }
 }
 
@@ -164,36 +147,66 @@ listening_socket_t create_listening_socket(const std::string& address, std::uint
 
 socket_info_t get_socket_info(const sockaddr_storage& ss, socklen_t len)
 {
-    std::array<char, INET6_ADDRSTRLEN> buf{};
+    if (len > sizeof(sa_family_t)) {
+        std::array<char, INET6_ADDRSTRLEN> buf{};
 
-    if (ss.ss_family == AF_INET && len >= sizeof(sockaddr_in)) {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        const auto& addr = reinterpret_cast<const sockaddr_in&>(ss);
-        if (inet_ntop(ss.ss_family, &addr.sin_addr, buf.data(), buf.size()) != nullptr) [[likely]] {
-            return make_peer(buf.data(), ntohs(addr.sin_port));
+        if (ss.ss_family == AF_INET && len >= sizeof(sockaddr_in)) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            const auto& addr = reinterpret_cast<const sockaddr_in&>(ss);
+            if (inet_ntop(ss.ss_family, &addr.sin_addr, buf.data(), buf.size()) != nullptr) [[likely]] {
+                return make_peer(buf.data(), ntohs(addr.sin_port));
+            }
         }
-    }
-    else if (ss.ss_family == AF_INET6 && len >= sizeof(sockaddr_in6)) {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        const auto& addr = reinterpret_cast<const sockaddr_in6&>(ss);
-        if (inet_ntop(ss.ss_family, &addr.sin6_addr, buf.data(), buf.size()) != nullptr) [[likely]] {
-            return make_peer(buf.data(), ntohs(addr.sin6_port));
+        else if (ss.ss_family == AF_INET6 && len >= sizeof(sockaddr_in6)) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            const auto& addr = reinterpret_cast<const sockaddr_in6&>(ss);
+            if (inet_ntop(ss.ss_family, &addr.sin6_addr, buf.data(), buf.size()) != nullptr) [[likely]] {
+                return make_peer(buf.data(), ntohs(addr.sin6_port));
+            }
         }
-    }
-    else if (ss.ss_family == AF_UNIX && len > sizeof(sa_family_t)) {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-        const auto& addr = reinterpret_cast<const sockaddr_un&>(ss);
-        if (addr.sun_path[0] == '\0') {
+        else if (ss.ss_family == AF_UNIX && len >= offsetof(sockaddr_un, sun_path)) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            const auto& addr = reinterpret_cast<const sockaddr_un&>(ss);
+            if (addr.sun_path[0] == '\0') {
 #pragma clang unsafe_buffer_usage begin
-            const std::string_view abstract_socket_name(&addr.sun_path[1], len - offsetof(sockaddr_un, sun_path) - 1);
+                const std::string_view abstract_socket_name(
+                    &addr.sun_path[1], len - offsetof(sockaddr_un, sun_path) - 1
+                );
 #pragma clang unsafe_buffer_usage end
-            return make_peer(abstract_socket_name, 0);
-        }
+                return make_peer(abstract_socket_name, 0);
+            }
 
-        return make_peer(&addr.sun_path[0], 0);
+            return make_peer(&addr.sun_path[0], 0);
+        }
     }
 
     return {};
+}
+
+void inet_pton(const std::string& address, in_addr& dst)
+{
+    const auto res = inet_pton(AF_INET, address.c_str(), &dst);
+    if (res == 0) [[unlikely]] {
+        throw std::invalid_argument("Invalid IPv4 address: " + address);
+    }
+
+    if (res != 1) [[unlikely]] {  // EAFNOSUPPORT case
+        const auto err = errno;
+        throw std::system_error(err, std::generic_category(), std::format("inet_pton(AF_INET, {})", address));
+    }
+}
+
+void inet_pton(const std::string& address, in6_addr& dst)
+{
+    const auto res = inet_pton(AF_INET6, address.c_str(), &dst);
+    if (res == 0) [[unlikely]] {
+        throw std::invalid_argument("Invalid IPv6 address: " + address);
+    }
+
+    if (res != 1) [[unlikely]] {  // EAFNOSUPPORT case
+        const auto err = errno;
+        throw std::system_error(err, std::generic_category(), std::format("inet_pton(AF_INET6, {})", address));
+    }
 }
 
 }  // namespace psb
