@@ -5,7 +5,7 @@
 #include <string>
 #include <string_view>
 
-#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 
 #include "export.h"
@@ -21,14 +21,20 @@ struct socket_options_t {
 };
 
 struct listening_socket_t {
-    int sock;
-    const char* transport;  // opentelemetry::semconv::network::NetworkTransportValues; e.g., kTcp
-    const char* type;       // opentelemetry::semconv::network::NetworkTypeValues; e.g., kIpv4
+    int sock{};
+    const char* transport{};  // opentelemetry::semconv::network::NetworkTransportValues; e.g., kTcp
+    const char* type{};       // opentelemetry::semconv::network::NetworkTypeValues; e.g., kIpv4
 };
 
 struct socket_info_t {
     std::string address;
-    std::uint16_t port;
+    std::uint16_t port{};
+};
+
+struct accepted_socket_t {
+    int sock{};
+    std::string address;
+    std::uint16_t port{};
 };
 
 /**
@@ -112,6 +118,15 @@ PSB_SOCKUTILS_EXPORT void inet_pton(const std::string& address, in_addr& dst);
  * @throw std::system_error The address family is not supported.
  */
 PSB_SOCKUTILS_EXPORT void inet_pton(const std::string& address, in6_addr& dst);
+
+/**
+ * @brief Accepts a connection on the socket @a fd and makes the accepted socket non-blocking and close-on-exec.
+ *
+ * @param fd Socket descriptor.
+ * @return Accepted socket and peer information, if available.
+ * @throw std::system_error Call to a system API failed.
+ */
+PSB_SOCKUTILS_EXPORT accepted_socket_t accept_connection(int fd);
 
 }  // namespace psb
 

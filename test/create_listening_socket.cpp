@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 
-#include <gsl/util>
+#include <system_error>
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+
+#include <gsl/util>
 #include <opentelemetry/semconv/incubating/network_attributes.h>
 
 #include "sockutils.h"
@@ -79,4 +81,26 @@ TEST(CreateListeningSocket, IPv6)
     unsigned int flags{};
     ASSERT_NO_THROW(flags = get_fd_flags(result.sock));
     EXPECT_EQ(flags & FD_CLOEXEC, 0);
+}
+
+TEST(CreateListeningSocket, Exception)
+{
+    const psb::socket_options_t opts{
+        .close_on_exec        = 1,
+        .reuse_addr           = 0,
+        .free_bind            = 0,
+        .defer_accept_timeout = 0,
+        .listen_backlog       = SOMAXCONN,
+    };
+
+    const auto result = psb::create_listening_socket("127.0.0.1", 0, opts);
+    auto close_socket = gsl::finally([sock = result.sock]() { close(sock); });
+
+    sockaddr_storage ss{};
+    socklen_t len = sizeof(ss);
+    ASSERT_NO_THROW(get_sock_name(result.sock, ss, len));
+    psb::socket_info_t info{};
+    ASSERT_NO_THROW(info = psb::get_socket_info(ss, len));
+
+    EXPECT_THROW(psb::create_listening_socket("127.0.0.1", info.port, opts), std::system_error);
 }

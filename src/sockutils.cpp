@@ -1,9 +1,9 @@
 #include "sockutils.h"
 
+#include <algorithm>
 #include <array>
-#include <cassert>
 #include <cerrno>
-#include <cstddef>
+#include <cstdint>
 #include <format>
 #include <string_view>
 #include <system_error>
@@ -14,10 +14,32 @@
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <unistd.h>
 
 #include <opentelemetry/semconv/incubating/network_attributes.h>
 
 namespace {
+
+class [[nodiscard]] close_on_error {
+public:
+    explicit close_on_error(int fd) noexcept : m_fd(fd) {}
+
+    close_on_error(const close_on_error&)            = delete;
+    close_on_error(close_on_error&&)                 = delete;
+    close_on_error& operator=(const close_on_error&) = delete;
+    close_on_error& operator=(close_on_error&&)      = delete;
+
+    ~close_on_error() noexcept
+    {
+        if (std::uncaught_exceptions() > this->m_uncaught_init) {
+            close(this->m_fd);
+        }
+    }
+
+private:
+    int m_fd;
+    int m_uncaught_init = std::uncaught_exceptions();
+};
 
 [[noreturn]] void throw_bind_error(int err, const std::string& address, std::uint16_t port)
 {
@@ -131,6 +153,7 @@ listening_socket_t create_listening_socket(const std::string& address, std::uint
         throw std::system_error(errno, std::generic_category(), "socket() failed");
     }
 
+    const close_on_error closer(sock);
     make_nonblocking(sock);
     handle_socket_options(sock, opts);
     bind_socket(sock, address, port);
@@ -207,6 +230,24 @@ void inet_pton(const std::string& address, in6_addr& dst)
         const auto err = errno;
         throw std::system_error(err, std::generic_category(), std::format("inet_pton(AF_INET6, {})", address));
     }
+}
+
+accepted_socket_t accept_connection(int fd)
+{
+    sockaddr_storage addr{};
+    socklen_t len = sizeof(addr);
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    auto res      = accept(fd, reinterpret_cast<sockaddr*>(&addr), &len);
+    if (res == -1) [[unlikely]] {
+        throw std::system_error(errno, std::system_category(), "accept");
+    }
+
+    const close_on_error closer(res);
+    make_nonblocking(res);
+    make_close_on_exec(res);
+
+    const auto info = get_socket_info(addr, std::min(len, static_cast<socklen_t>(sizeof(addr))));
+    return {.sock = res, .address = info.address, .port = info.port};
 }
 
 }  // namespace psb

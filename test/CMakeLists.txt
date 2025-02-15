@@ -10,6 +10,7 @@ set(TEST_TARGET test_sockutils)
 
 add_executable(
     "${TEST_TARGET}"
+    accept_connection.cpp
     bind_socket.cpp
     create_listening_socket.cpp
     get_socket_info.cpp
