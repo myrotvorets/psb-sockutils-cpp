@@ -13,6 +13,7 @@ add_executable(
     bind_socket.cpp
     create_listening_socket.cpp
     get_socket_info.cpp
+    inet_pton.cpp
     make_cloexec.cpp
     make_nonblocking.cpp
     set_socket_option.cpp

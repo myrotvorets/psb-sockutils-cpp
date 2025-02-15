@@ -1,8 +1,8 @@
-#include <fcntl.h>
 #include <gtest/gtest.h>
 
 #include <gsl/util>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <opentelemetry/semconv/incubating/network_attributes.h>

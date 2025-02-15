@@ -1,8 +1,9 @@
 #include <gtest/gtest.h>
 
 #include <array>
-#include <gsl/util>
 #include <string>
+
+#include <gsl/util>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
