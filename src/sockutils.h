@@ -31,14 +31,66 @@ struct socket_info_t {
     std::uint16_t port;
 };
 
+/**
+ * @brief Makes the file descriptor @a fd non-blocking.
+ *
+ * @param fd File descriptor.
+ * @throw std::system_error Call to `fcntl()` failed.
+ */
 PSB_SOCKUTILS_EXPORT void make_nonblocking(int fd);
+
+/**
+ * @brief Makes the file descriptor @a fd close-on-exec.
+ *
+ * @param fd File descriptor.
+ * @throw std::system_error Call to `fcntl()` failed.
+ */
 PSB_SOCKUTILS_EXPORT void make_close_on_exec(int fd);
+
+/**
+ * @brief Sets the socket option @a optname to @a optval.
+ *
+ * @param sock Socket descriptor.
+ * @param level The protocol level.
+ * @param optname The option name.
+ * @param optval The option value.
+ * @param name The option name as a string.
+ * @throw std::system_error Call to `setsockopt()` failed.
+ */
 PSB_SOCKUTILS_EXPORT void set_socket_option(int sock, int level, int optname, int optval, std::string_view name);
+
+/**
+ * @brief Binds the socket @a sock to the address @a address and port @a port.
+ *
+ * @param sock Socket descriptor.
+ * @param address IP address.
+ * @param port Port number.
+ * @throw std::system_error Call to `bind()` failed.
+ * @throw std::system_error The address family is not supported.
+ * @throw std::invalid_argument The address is not valid IPv4 or IPv6 address.
+ */
 PSB_SOCKUTILS_EXPORT void bind_socket(int sock, const std::string& address, std::uint16_t port);
 
+/**
+ * @brief Creates a listening socket bound to the address @a address and port @a port.
+ *
+ * @param address IP address.
+ * @param port Port number.
+ * @param opts Socket options.
+ * @return The listening socket.
+ * @throw std::system_error Call to a system API failed.
+ * @throw std::invalid_argument The address is not valid IPv4 or IPv6 address.
+ */
 PSB_SOCKUTILS_EXPORT listening_socket_t
 create_listening_socket(const std::string& address, std::uint16_t port, const socket_options_t& opts);
 
+/**
+ * @brief Gets the socket information from the network address structure @a ss.
+ *
+ * @param ss Network address structure.
+ * @param len Length of the network address structure.
+ * @return The socket information.
+ */
 PSB_SOCKUTILS_EXPORT socket_info_t get_socket_info(const sockaddr_storage& ss, socklen_t len);
 
 /**
