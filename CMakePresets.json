@@ -1,0 +1,192 @@
+{
+    "version": 4,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "BUILD_TESTING": "ON",
+                "ENABLE_MAINTAINER_MODE": "ON"
+            }
+        },
+        {
+            "name": "base-coverage",
+            "hidden": true,
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Coverage"
+            }
+        },
+        {
+            "name": "default",
+            "description": "Debug build",
+            "hidden": false,
+            "inherits": "base"
+        },
+        {
+            "name": "release",
+            "description": "Release build",
+            "hidden": false,
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "coverage-clang",
+            "description": "Coverage build with clang",
+            "hidden": false,
+            "inherits": "base-coverage",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++"
+            }
+        },
+        {
+            "name": "coverage-gcc",
+            "description": "Coverage build with gcc",
+            "hidden": false,
+            "inherits": "base-coverage",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++"
+            }
+        },
+        {
+            "name": "ASAN",
+            "description": "Address sanitizer build",
+            "hidden": false,
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPES": "ASAN"
+            }
+        },
+        {
+            "name": "LSAN",
+            "description": "Leak sanitizer build",
+            "hidden": false,
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPES": "LSAN"
+            }
+        },
+        {
+            "name": "UBSAN",
+            "description": "Undefined behavior sanitizer build",
+            "hidden": false,
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPES": "UBSAN"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "verbose": true,
+            "jobs": 0
+        },
+        {
+            "name": "default",
+            "description": "Debug build",
+            "inherits": "base",
+            "configurePreset": "default"
+        },
+        {
+            "name": "release",
+            "description": "Release build",
+            "inherits": "base",
+            "configurePreset": "release"
+        },
+        {
+            "name": "coverage-clang",
+            "description": "Coverage build with clang",
+            "inherits": "base",
+            "configurePreset": "coverage-clang"
+        },
+        {
+            "name": "coverage-gcc",
+            "description": "Coverage build with gcc",
+            "inherits": "base",
+            "configurePreset": "coverage-gcc"
+        },
+        {
+            "name": "ASAN",
+            "description": "Address sanitizer build",
+            "inherits": "base",
+            "configurePreset": "ASAN"
+        },
+        {
+            "name": "LSAN",
+            "description": "Leak sanitizer build",
+            "inherits": "base",
+            "configurePreset": "LSAN"
+        },
+        {
+            "name": "UBSAN",
+            "description": "Undefined behavior sanitizer build",
+            "inherits": "base",
+            "configurePreset": "UBSAN"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true,
+                "quiet": false
+            }
+        },
+        {
+            "name": "default",
+            "description": "Debug build",
+            "inherits": "base",
+            "configurePreset": "default"
+        },
+        {
+            "name": "release",
+            "description": "Release build",
+            "inherits": "base",
+            "configurePreset": "release"
+        },
+        {
+            "name": "coverage-clang",
+            "description": "Coverage build with clang",
+            "inherits": "base",
+            "configurePreset": "coverage-clang"
+        },
+        {
+            "name": "coverage-gcc",
+            "description": "Coverage build with gcc",
+            "inherits": "base",
+            "configurePreset": "coverage-gcc"
+        },
+        {
+            "name": "ASAN",
+            "description": "Address sanitizer build",
+            "inherits": "base",
+            "configurePreset": "ASAN"
+        },
+        {
+            "name": "LSAN",
+            "description": "Leak sanitizer build",
+            "inherits": "base",
+            "configurePreset": "LSAN"
+        },
+        {
+            "name": "UBSAN",
+            "description": "Undefined behavior sanitizer build",
+            "inherits": "base",
+            "configurePreset": "UBSAN"
+        }
+    ]
+}
