@@ -15,12 +15,13 @@ namespace {
 
 void check_address_port(int domain, socklen_t min_len, const std::string& expected_address, std::uint16_t expected_port)
 {
-    const auto sock   = create_socket(domain, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(domain, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     sockaddr_storage ss{};
     socklen_t len = sizeof(ss);
-    get_sock_name(sock, ss, len);
+    ASSERT_NO_THROW(get_sock_name(sock, ss, len));
 
     ASSERT_GE(len, min_len);
 
@@ -31,12 +32,13 @@ void check_address_port(int domain, socklen_t min_len, const std::string& expect
 
 void check_bad_length(int domain, socklen_t length)
 {
-    const auto sock   = create_socket(domain, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(domain, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     sockaddr_storage ss{};
     socklen_t len = sizeof(ss);
-    get_sock_name(sock, ss, len);
+    ASSERT_NO_THROW(get_sock_name(sock, ss, len));
 
     ASSERT_GE(len, length);
 
@@ -92,7 +94,8 @@ TEST(GetSocketInfo, BadLengthLocal)
 
 TEST(GetSocketInfo, AbstractLocalSocket)
 {
-    const auto sock   = create_socket(AF_LOCAL, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(AF_LOCAL, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     // Abstract UNIX sockets don't have to be NUL-terminated
@@ -108,7 +111,7 @@ TEST(GetSocketInfo, AbstractLocalSocket)
 
     sockaddr_storage ss{};
     len = sizeof(ss);
-    get_sock_name(sock, ss, len);
+    ASSERT_NO_THROW(get_sock_name(sock, ss, len));
 
     ASSERT_GE(len, sizeof(sa_family_t) + name.size());
 
@@ -119,7 +122,8 @@ TEST(GetSocketInfo, AbstractLocalSocket)
 
 TEST(GetSocketInfo, RegularLocalSocket)
 {
-    const auto sock   = create_socket(AF_LOCAL, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(AF_LOCAL, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     constexpr std::string_view name = "regular-local.socket";
@@ -136,7 +140,7 @@ TEST(GetSocketInfo, RegularLocalSocket)
 
     sockaddr_storage ss{};
     socklen_t len = sizeof(ss);
-    get_sock_name(sock, ss, len);
+    ASSERT_NO_THROW(get_sock_name(sock, ss, len));
 
     ASSERT_GE(len, sizeof(sa_family_t) + name.size());
 

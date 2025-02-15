@@ -12,15 +12,12 @@
 
 namespace {
 
-testing::AssertionResult syscall_succeeded(int res)
+void syscall_succeeded(int res, const std::string& api)
 {
     if (res == -1) {
         const auto err = errno;
-        // NOLINTNEXTLINE(concurrency-mt-unsafe)
-        return testing::AssertionFailure() << std::strerror(err);
+        throw std::system_error(err, std::system_category(), api);
     }
-
-    return testing::AssertionSuccess();
 }
 
 }  // namespace
@@ -45,7 +42,7 @@ bool ipv6_supported()
 void get_sock_name(int sock, sockaddr_storage& ss, socklen_t& len)
 {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    ASSERT_TRUE(syscall_succeeded(getsockname(sock, reinterpret_cast<sockaddr*>(&ss), &len)));
+    syscall_succeeded(getsockname(sock, reinterpret_cast<sockaddr*>(&ss), &len), "getsockname");
 }
 
 int get_socket_option(int sock, int level, int optname)
@@ -53,7 +50,7 @@ int get_socket_option(int sock, int level, int optname)
     int optval       = 0;
     socklen_t optlen = sizeof(optval);
 
-    EXPECT_TRUE(syscall_succeeded(getsockopt(sock, level, optname, &optval, &optlen)));
+    syscall_succeeded(getsockopt(sock, level, optname, &optval, &optlen), "getsockopt");
     EXPECT_EQ(optlen, sizeof(optval));
 
     return optval;
@@ -62,7 +59,7 @@ int get_socket_option(int sock, int level, int optname)
 unsigned int get_fd_flags(int fd)
 {
     const auto res = fcntl(fd, F_GETFD, 0);
-    EXPECT_TRUE(syscall_succeeded(res));
+    syscall_succeeded(res, "fcntl(F_GETFD)");
 
     return gsl::narrow_cast<unsigned int>(res);
 }
@@ -70,7 +67,7 @@ unsigned int get_fd_flags(int fd)
 unsigned int get_status_flags(int fd)
 {
     const auto res = fcntl(fd, F_GETFL, 0);
-    EXPECT_TRUE(syscall_succeeded(res));
+    syscall_succeeded(res, "fcntl(F_GETFL)");
 
     return gsl::narrow_cast<unsigned int>(res);
 }
@@ -78,7 +75,6 @@ unsigned int get_status_flags(int fd)
 int create_socket(int domain, int type, int protocol)
 {
     const auto sock = socket(domain, type, protocol);
-    EXPECT_TRUE(syscall_succeeded(sock));
-
+    syscall_succeeded(sock, "socket");
     return sock;
 }

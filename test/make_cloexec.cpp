@@ -11,12 +11,14 @@
 
 TEST(MakeCloseOnExec, HappyPath)
 {
-    const auto sock   = create_socket(AF_INET, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(AF_INET, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     ASSERT_NO_THROW(psb::make_close_on_exec(sock));
 
-    const auto flags = get_fd_flags(sock);
+    unsigned int flags{};
+    ASSERT_NO_THROW(flags = get_fd_flags(sock));
     EXPECT_EQ(flags & FD_CLOEXEC, FD_CLOEXEC);
 }
 

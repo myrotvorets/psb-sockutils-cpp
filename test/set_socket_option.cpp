@@ -11,14 +11,16 @@
 
 TEST(SetSocketOption, HappyPath)
 {
-    const auto sock   = create_socket(AF_INET, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(AF_INET, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     constexpr int expected_optval = 1;
 
     ASSERT_NO_THROW(psb::set_socket_option(sock, SOL_SOCKET, SO_REUSEADDR, expected_optval, "SO_REUSEADDR"));
 
-    const auto optval = get_socket_option(sock, SOL_SOCKET, SO_REUSEADDR);
+    int optval{};
+    ASSERT_NO_THROW(optval = get_socket_option(sock, SOL_SOCKET, SO_REUSEADDR));
     ASSERT_EQ(optval, expected_optval);
 }
 

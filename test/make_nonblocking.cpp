@@ -12,12 +12,14 @@
 
 TEST(MakeNonblockingTest, HappyPath)
 {
-    const auto sock   = create_socket(AF_INET, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(AF_INET, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     ASSERT_NO_THROW(psb::make_nonblocking(sock));
 
-    const auto flags = get_status_flags(sock);
+    unsigned int flags{};
+    ASSERT_NO_THROW(flags = get_status_flags(sock));
     EXPECT_EQ(flags & O_NONBLOCK, O_NONBLOCK);
 }
 
@@ -28,7 +30,8 @@ TEST(MakeNonblockingTest, BadFD)
 
 TEST(MakeNonblockingTest, Functional)
 {
-    const auto sock   = create_socket(AF_INET, SOCK_STREAM, 0);
+    int sock{};
+    ASSERT_NO_THROW(sock = create_socket(AF_INET, SOCK_STREAM, 0));
     auto close_socket = gsl::finally([sock]() { close(sock); });
 
     ASSERT_NO_THROW(psb::make_nonblocking(sock));
