@@ -15,7 +15,7 @@ project(psb-sockutils VERSION 0.0.1 LANGUAGES CXX)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_TESTING "Whether to enable tests" ${PROJECT_IS_TOP_LEVEL})
 option(INSTALL_SOCKUTILS "Whether to enable install targets" ${PROJECT_IS_TOP_LEVEL})
-option(ENABLE_MAINTAINER_MODE "Enable maintainer mode" ON)
+option(ENABLE_MAINTAINER_MODE "Enable maintainer mode" OFF)
 option(USE_CLANG_TIDY "Use clang-tidy" OFF)
 
 include(build_types)
