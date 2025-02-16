@@ -236,8 +236,12 @@ accepted_socket_t accept_connection(int fd)
 {
     sockaddr_storage addr{};
     socklen_t len = sizeof(addr);
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    auto res      = accept(fd, reinterpret_cast<sockaddr*>(&addr), &len);
+    int res{};
+    do {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        res = accept(fd, reinterpret_cast<sockaddr*>(&addr), &len);
+    } while (res == -1 && errno == EINTR);
+
     if (res == -1) [[unlikely]] {
         throw std::system_error(errno, std::system_category(), "accept");
     }
