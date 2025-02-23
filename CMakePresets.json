@@ -65,7 +65,7 @@
             "hidden": false,
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPES": "ASAN"
+                "CMAKE_BUILD_TYPE": "ASAN"
             }
         },
         {
@@ -74,7 +74,7 @@
             "hidden": false,
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPES": "LSAN"
+                "CMAKE_BUILD_TYPE": "LSAN"
             }
         },
         {
@@ -83,7 +83,7 @@
             "hidden": false,
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPES": "UBSAN"
+                "CMAKE_BUILD_TYPE": "UBSAN"
             }
         }
     ],
