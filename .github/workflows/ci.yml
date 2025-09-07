@@ -67,6 +67,6 @@ jobs:
 
       - name: Build and test
         run: |
-          cmake --preset ${{ matrix.preset.name }}
+          cmake --preset ${{ matrix.preset.name }} -DVCPKG_TARGET_TRIPLET=x64-linux-release
           cmake --build --preset ${{ matrix.preset.name }} -j $(nproc)
           ctest --preset ${{ matrix.preset.name }}

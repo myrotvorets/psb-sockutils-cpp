@@ -8,7 +8,7 @@ if(CTEST_COVERAGE_COMMAND)
 endif()
 
 ctest_start(Experimental)
-set(options -DCMAKE_CXX_COMPILER=clang++)
+set(options -DCMAKE_CXX_COMPILER=clang++ ${CONFIGURE_OPTIONS})
 ctest_configure(OPTIONS "${options}")
 ctest_build()
 ctest_test(

@@ -53,7 +53,7 @@ jobs:
 
       - name: Build
         run: |
-          cmake -B build
+          cmake -B build -DVCPKG_TARGET_TRIPLET=x64-linux-release
           cmake --build build
 
       - name: Perform CodeQL Analysis
