@@ -35,6 +35,7 @@ jobs:
         uses: github/codeql-action/init@f1f6e5f6af878fb37288ce1c627459e94dbf7d01 # v3.30.1
         with:
           languages: ${{ matrix.language }}
+          config-file: ./.github/codeql-config.yml
 
       - name: Install dependencies
         uses: ./.github/actions/install-dependencies
