@@ -38,7 +38,7 @@ jobs:
           key: ${{ runner.os }}-vcpkg-binary-cache
 
       - name: Configure
-        run: cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DVCPKG_TARGET_TRIPLET=x64-linux-release
 
       - name: Run clang-tidy
         run: clang-tidy -p build $(jq -r 'map(select(.file | endswith(".cpp"))) | .[].file' build/compile_commands.json) --warnings-as-errors='*'

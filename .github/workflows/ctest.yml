@@ -66,7 +66,7 @@ jobs:
           key: ${{ runner.os }}-vcpkg-binary-cache
 
       - name: Run tests
-        run: ctest -V -S "ctest/${{ matrix.script }}.ctest.cmake"
+        run: ctest -DVCPKG_TARGET_TRIPLET=x64-linux-release -V -S "ctest/${{ matrix.script }}.ctest.cmake"
 
       - name: Upload test results
         if: (!cancelled())
