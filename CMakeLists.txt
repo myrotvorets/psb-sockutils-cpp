@@ -22,7 +22,7 @@ include(build_types)
 include(tools)
 include(coverage)
 
-find_package(opentelemetry-cpp CONFIG REQUIRED)
+find_package(opentelemetry-cpp CONFIG REQUIRED COMPONENTS api)
 
 add_subdirectory(src)
 
