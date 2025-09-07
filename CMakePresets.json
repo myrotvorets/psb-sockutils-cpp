@@ -69,15 +69,6 @@
             }
         },
         {
-            "name": "LSAN",
-            "description": "Leak sanitizer build",
-            "hidden": false,
-            "inherits": "base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "LSAN"
-            }
-        },
-        {
             "name": "UBSAN",
             "description": "Undefined behavior sanitizer build",
             "hidden": false,
@@ -125,12 +116,6 @@
             "configurePreset": "ASAN"
         },
         {
-            "name": "LSAN",
-            "description": "Leak sanitizer build",
-            "inherits": "base",
-            "configurePreset": "LSAN"
-        },
-        {
             "name": "UBSAN",
             "description": "Undefined behavior sanitizer build",
             "inherits": "base",
@@ -175,12 +160,6 @@
             "description": "Address sanitizer build",
             "inherits": "base",
             "configurePreset": "ASAN"
-        },
-        {
-            "name": "LSAN",
-            "description": "Leak sanitizer build",
-            "inherits": "base",
-            "configurePreset": "LSAN"
         },
         {
             "name": "UBSAN",
