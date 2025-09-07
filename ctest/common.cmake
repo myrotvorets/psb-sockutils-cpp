@@ -1,4 +1,5 @@
 cmake_host_system_information(RESULT HOSTNAME QUERY HOSTNAME)
+cmake_host_system_information(RESULT nproc QUERY NUMBER_OF_LOGICAL_CORES)
 set(CTEST_SITE "${HOSTNAME}")
 
 cmake_path(GET CMAKE_PARENT_LIST_FILE STEM FNAME)

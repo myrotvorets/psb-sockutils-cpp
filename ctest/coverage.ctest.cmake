@@ -10,8 +10,9 @@ endif()
 ctest_start(Experimental)
 set(options -DCMAKE_CXX_COMPILER=clang++ ${CONFIGURE_OPTIONS})
 ctest_configure(OPTIONS "${options}")
-ctest_build()
+ctest_build(PARALLEL_LEVEL ${nproc})
 ctest_test(
+    PARALLEL_LEVEL ${nproc}
     OUTPUT_JUNIT ${CTEST_BINARY_DIRECTORY}/junit.xml
     RETURN_VALUE test_results
 )

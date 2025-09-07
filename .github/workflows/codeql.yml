@@ -54,7 +54,7 @@ jobs:
       - name: Build
         run: |
           cmake -B build -DVCPKG_TARGET_TRIPLET=x64-linux-release
-          cmake --build build
+          cmake --build build -j$(nproc)
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@f1f6e5f6af878fb37288ce1c627459e94dbf7d01 # v3.30.1
