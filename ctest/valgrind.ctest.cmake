@@ -10,7 +10,7 @@ ctest_start(Experimental)
 if(CTEST_MEMORYCHECK_COMMAND)
     set(options -DCMAKE_CXX_COMPILER=clang++ ${CONFIGURE_OPTIONS})
     ctest_configure(OPTIONS "${options}")
-    ctest_build()
+    ctest_build(PARALLEL_LEVEL ${nproc})
     ctest_memcheck(
         OUTPUT_JUNIT ${CTEST_BINARY_DIRECTORY}/junit.xml
         RETURN_VALUE test_results
