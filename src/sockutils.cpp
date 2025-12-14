@@ -4,7 +4,9 @@
 #include <array>
 #include <cerrno>
 #include <cstdint>
+#include <exception>
 #include <format>
+#include <iterator>
 #include <string_view>
 #include <system_error>
 
@@ -82,13 +84,17 @@ void handle_socket_options(int sock, const psb::socket_options_t& opts)
         psb::set_socket_option(sock, SOL_SOCKET, SO_REUSEADDR, opts.reuse_addr, "SO_REUSEADDR");
     }
 
+#if defined(IP_FREEBIND)
     if (opts.free_bind != 0) {
         psb::set_socket_option(sock, IPPROTO_IP, IP_FREEBIND, opts.free_bind, "IP_FREEBIND");
     }
+#endif
 
+#if defined(TCP_DEFER_ACCEPT)
     if (opts.defer_accept_timeout != 0) {
         psb::set_socket_option(sock, IPPROTO_TCP, TCP_DEFER_ACCEPT, opts.defer_accept_timeout, "TCP_DEFER_ACCEPT");
     }
+#endif
 }
 
 psb::socket_info_t make_peer(std::string_view address, uint16_t port)
@@ -130,7 +136,10 @@ void set_socket_option(int sock, int level, int optname, int optval, std::string
 {
     if (const auto res = setsockopt(sock, level, optname, &optval, sizeof(optval)); res != 0) {
         const auto err = errno;
-        throw std::system_error(err, std::generic_category(), std::format("setsockopt({}) failed", name));
+        // Ignore unsupported options
+        if (err != ENOPROTOOPT) {
+            throw std::system_error(err, std::generic_category(), std::format("setsockopt({}) failed", name));
+        }
     }
 }
 
@@ -189,17 +198,28 @@ socket_info_t get_socket_info(const sockaddr_storage& ss, socklen_t len)
         }
         else if (ss.ss_family == AF_UNIX && len >= offsetof(sockaddr_un, sun_path)) {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            const auto& addr = reinterpret_cast<const sockaddr_un&>(ss);
-            if (addr.sun_path[0] == '\0') {
-#pragma clang unsafe_buffer_usage begin
-                const std::string_view abstract_socket_name(
-                    &addr.sun_path[1], len - offsetof(sockaddr_un, sun_path) - 1
-                );
-#pragma clang unsafe_buffer_usage end
-                return make_peer(abstract_socket_name, 0);
-            }
+            const auto& addr        = reinterpret_cast<const sockaddr_un&>(ss);
+            const auto raw_name_len = static_cast<socklen_t>(len - offsetof(sockaddr_un, sun_path));
+            const auto name_len_with_prefix =
+                std::min<socklen_t>(raw_name_len, static_cast<socklen_t>(sizeof(addr.sun_path)));
 
-            return make_peer(&addr.sun_path[0], 0);
+            if (addr.sun_path[0] == '\0') {
+                // Abstract UNIX socket; name starts after the leading NUL and may be empty.
+                if (name_len_with_prefix > 1) {
+#pragma clang unsafe_buffer_usage begin
+                    const std::string_view abstract_socket_name(
+                        &addr.sun_path[1], static_cast<std::size_t>(name_len_with_prefix - 1)
+                    );
+#pragma clang unsafe_buffer_usage end
+                    return make_peer(abstract_socket_name, 0);
+                }
+            }
+            else {
+                const std::string_view raw_path(&addr.sun_path[0], name_len_with_prefix);
+                const auto* terminator = std::ranges::find(raw_path, '\0');
+                const auto path_len    = static_cast<std::size_t>(std::distance(raw_path.begin(), terminator));
+                return make_peer(std::string_view(raw_path.begin(), path_len), 0);
+            }
         }
     }
 
