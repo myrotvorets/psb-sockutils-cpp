@@ -27,7 +27,7 @@ jobs:
         uses: ./.github/actions/install-dependencies
 
       - name: Set up vcpkg
-        uses: lukka/run-vcpkg@5e0cab206a5ea620130caf672fce3e4a6b5666a1 # v11.5
+        uses: lukka/run-vcpkg@1737e223b9c3f4fb07a7cf1cfa123cc243fcc0dd # v11.4
         env:
           VCPKG_BINARY_SOURCES: default,rw
 
